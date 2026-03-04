@@ -10,6 +10,7 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
+  int _lastBottomIndex = 0; // remembers the last active bottom-nav tab
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   void _selectPage(int index) {
@@ -43,6 +44,7 @@ class _MainLayoutState extends State<MainLayout> {
   void _onBottomTap(int bottomIndex) {
     if (bottomIndex < 0 || bottomIndex >= _bottomPages.length) return;
 
+    _lastBottomIndex = bottomIndex;
     final targetPage = _bottomPages[bottomIndex];
     final pageIndex = pageItems.indexOf(targetPage);
     _selectPage(pageIndex);
@@ -60,10 +62,15 @@ class _MainLayoutState extends State<MainLayout> {
           padding: EdgeInsets.zero,
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
+              decoration: BoxDecoration(color: Color(0xFF1C3A5E)),
               child: Text(
                 'Navigation',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
             // only show entries that aren’t also in the bottom bar
@@ -84,16 +91,19 @@ class _MainLayoutState extends State<MainLayout> {
         index: _currentIndex,
         children: pageItems.map((p) => p.widget).toList(),
       ),
-      // only show a BottomNavigationBar when the current page wants it *and*
-      // there are at least two entries.  Flutter asserts otherwise.
-      bottomNavigationBar:
-          (currentPage.showInBottomNav && _bottomPages.length >= 2)
+      // Always show the bottom nav bar so users can return to a main page
+      // even when a drawer-only page is active.
+      bottomNavigationBar: _bottomPages.length >= 2
           ? BottomNavigationBar(
-              type: BottomNavigationBarType.fixed, // always show all items
-              currentIndex: _currentBottomIndex.clamp(
-                0,
-                _bottomPages.length - 1,
-              ),
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.white,
+              selectedItemColor: const Color(0xFF1C3A5E),
+              unselectedItemColor: Colors.grey,
+              selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+              elevation: 8,
+              currentIndex: currentPage.showInBottomNav
+                  ? _currentBottomIndex.clamp(0, _bottomPages.length - 1)
+                  : _lastBottomIndex,
               onTap: _onBottomTap,
               items: _bottomPages
                   .map(
